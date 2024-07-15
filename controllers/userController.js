@@ -67,7 +67,7 @@ exports.forgotPassword = async (req, res) => {
     await resetToken.save();
 
     // Send email with reset link
-    const resetUrl = `http://${req.headers.host}/resetPassword?token=${token}`;
+    const resetUrl = `http://${req.headers.host}/api/user/resetPassword?token=${token}`;
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: user.email,
