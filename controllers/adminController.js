@@ -112,7 +112,8 @@ exports.createReport = async (req, res) => {
     }
 
     // Pipe the PDF into a writable stream
-    doc.pipe(fs.createWriteStream(filePath));
+    const stream = fs.createWriteStream(filePath);
+    doc.pipe(stream);
 
     // Add fonts
     doc.font('Times-Roman');
@@ -191,9 +192,20 @@ exports.createReport = async (req, res) => {
     doc.on('pageAdded', () => {
       addFooter(doc);
     });
-    
+
     // Finalize the PDF
     doc.end();
+
+    // Wait for the file to finish writing before sending the response
+    stream.on('finish', () => {
+      // Set headers to force download
+      res.setHeader('Content-disposition', 'attachment; filename=alumni_report.pdf');
+      res.setHeader('Content-type', 'application/pdf');
+
+      // Create a read stream and pipe it to the response
+      const readStream = fs.createReadStream(filePath);
+      readStream.pipe(res);
+    });
 
     res.status(200).json({ message: 'Report created successfully', filePath: `/reports/${fileName}` });
   } catch (err) {
