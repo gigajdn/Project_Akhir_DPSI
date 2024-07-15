@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const nodemailer = require('nodemailer');
 const Admin = require('../models/admin');
 const Alumni = require('../models/alumni');
 const ResetToken = require('../models/resetToken');

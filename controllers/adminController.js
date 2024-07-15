@@ -2,9 +2,8 @@ const Admin = require('../models/admin');
 const Alumni = require('../models/alumni');
 const PDFDocument = require('pdfkit');
 const { PassThrough } = require('stream');
-const fs = require('fs');
-const path = require('path');
 const multer = require('multer');
+const bcrypt = require('bcryptjs');
 const ExcelJS = require('exceljs');
 
 
@@ -20,6 +19,13 @@ const getCellValue = (cell) => {
   return cell || ''; // Otherwise, return the cell value or empty string if undefined
 };
 
+// Function to hash password
+const hashPassword = async (password) => {
+  const saltRounds = 8; // You can adjust the salt rounds based on your security needs
+  const hashedPassword = await bcrypt.hashSync(password, saltRounds);
+  return hashedPassword;
+};
+
 // Import Alumni Data
 exports.importAlumniData = [
   upload.single('file'),
@@ -32,7 +38,7 @@ exports.importAlumniData = [
 
       const alumniData = [];
 
-      worksheet.eachRow((row, rowNumber) => {
+      worksheet.eachRow(async (row, rowNumber) => {
         if (rowNumber > 1) { // Skip header row
           let profile;
           let workHistory;
@@ -52,7 +58,7 @@ exports.importAlumniData = [
           const data = {
             name: getCellValue(row.getCell(1)),
             email: getCellValue(row.getCell(2)),
-            password: getCellValue(row.getCell(3)),
+            password: await hashPassword(getCellValue(row.getCell(3))), // Hashing password
             profile: profile,
             education: {
               degree: getCellValue(row.getCell(5)),
@@ -156,7 +162,7 @@ const generatePDFBuffer = async (alumni) => {
         doc.moveDown(2);
       }
     });
-    
+
     // Function to add footer
     const addFooter = (doc) => {
       doc
