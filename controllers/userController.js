@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 const Admin = require('../models/admin');
 const Alumni = require('../models/alumni');
@@ -51,6 +52,7 @@ exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     const user = await Alumni.findOne({ email }) || await Admin.findOne({ email });
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -85,23 +87,39 @@ exports.forgotPassword = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: 'Token and new password are required' });
+    }
+
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const resetToken = await ResetToken.findOne({ token });
+
     if (!resetToken) {
       return res.status(400).json({ message: 'Invalid or expired reset token' });
     }
 
-    const user = await (resetToken.userModel === 'Alumni' ? Alumni : Admin).findById(decoded.id);
+    // Find the user based on the userId and userModel
+    const UserModel = resetToken.userModel === 'Alumni' ? Alumni : Admin;
+    const user = await UserModel.findById(resetToken.userId);
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    user.password = bcrypt.hashSync(newPassword, 8);
-    await user.save();
-    await resetToken.delete();
+    // Hash the new password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
-    res.status(200).json({ message: 'Password reset successfully' });
+    // Update the user's password
+    user.password = hashedPassword;
+    await user.save();
+
+    // Delete the used reset token
+    await ResetToken.deleteOne({ _id: resetToken._id });
+
+    res.status(200).json({ message: 'Password has been reset successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
