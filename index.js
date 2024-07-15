@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const cors = require('cors');
 
+
 const connectDB = require('./config/mongodbConfig')
 const adminRoutes = require('./routes/adminRoutes');
 const alumniRoutes = require('./routes/alumniRoutes');
