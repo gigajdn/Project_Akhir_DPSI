@@ -9,12 +9,23 @@ const transporter = require('../config/emailConfig');
 // Register Alumni
 exports.registerAlumni = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, profile, education, workHistory } = req.body;
+
+    // Hash the password
     const hashedPassword = bcrypt.hashSync(password, 8);
-    const newAlumni = new Alumni({ name, email, password: hashedPassword });
+
+    // Create a new Alumni instance with the provided data
+    const newAlumni = new Alumni({
+      name, email, password: hashedPassword, profile, education, workHistory
+    });
+
+    // Save the new Alumni instance to the database
     await newAlumni.save();
+
+    // Respond with the newly created alumni data
     res.status(201).json(newAlumni);
   } catch (err) {
+    // Respond with the error message if any error occurs
     res.status(500).json({ error: err.message });
   }
 };

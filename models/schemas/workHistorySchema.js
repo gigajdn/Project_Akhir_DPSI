@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 const workHistorySchema = new mongoose.Schema({
-  company: { type: String, required: true },
-  position: { type: String, required: true },
-  startDate: { type: Date, required: true },
+  company: { type: String, default: null },
+  position: { type: String, default: null },
+  startDate: { type: Date, default: null },
   endDate: { type: Date, default: null },
   responsibilities: { type: String, default: '' },
 }, { timestamps: true });
