@@ -44,10 +44,16 @@ exports.searchAlumni = async (req, res) => {
 // View Alumni Details
 exports.viewAlumniDetails = async (req, res) => {
   try {
-    const alumni = await Alumni.findById(req.params.id);
+    // Alumni ID is now available in req.userId from the middleware
+    const alumni = await Alumni.findById(req.userId);
+    
+    if (!alumni) {
+      return res.status(404).json({ error: 'Alumni not found.' });
+    }
+
     res.status(200).json(alumni);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: `Error retrieving alumni details: ${err.message}` });
   }
 };
 
